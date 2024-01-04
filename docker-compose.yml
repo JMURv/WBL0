@@ -1,0 +1,43 @@
+version: '3.3'
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:15.0-alpine
+    restart: always
+    ports:
+      - "5432:5432"
+    env_file:
+      - ./.env
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  nats:
+    image: "nats-streaming:latest"
+    restart: "always"
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    expose:
+      - "4222"
+      - "8222"
+
+  backend:
+    container_name: backend
+    image: "wbl0:latest"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - ./.env
+    volumes:
+      - ./:/app
+    ports:
+      - "8000:8000"
+    expose:
+      - "8000"
+    depends_on:
+      - postgres
+    command: sh -c "go run ."
+
+volumes:
+  pg_data:
